@@ -2,6 +2,7 @@
 using CoreGraphics;
 using CustomRenderer;
 using CustomRenderer.iOS;
+using CustomRenderer.iOS.Utils;
 using Foundation;
 using System;
 using UIKit;
@@ -34,13 +35,26 @@ namespace CustomRenderer.iOS
 				SetupEventHandlers ();
 				SetupLiveCameraStream ();
 				AuthorizeCameraUse ();
+
 			} catch (Exception ex) {
 				System.Diagnostics.Debug.WriteLine (@"			ERROR: ", ex.Message);
 			}
+
 		}
 
+		public override void ViewDidAppear(bool animated)
+		{
+            base.ViewDidAppear(animated);
+            VolumeButtonHandler.Instance.Start();
+		}
+		public override void ViewDidDisappear(bool animated)
+		{
+            base.ViewDidDisappear(animated);
+            VolumeButtonHandler.Instance.Stop();
+		}
 		void SetupUserInterface ()
 		{
+            
 			var centerButtonX = View.Bounds.GetMidX () - 35f;
 			var topLeftX = View.Bounds.X + 25;
 			var topRightX = View.Bounds.Right - 65;
@@ -50,13 +64,13 @@ namespace CustomRenderer.iOS
 			var buttonHeight = 70;
 
 			liveCameraStream = new UIView () {
-				Frame = new CGRect (0f, 0f, 320f, View.Bounds.Height)
+                Frame = new CGRect (0f, 0f, View.Bounds.Width, View.Bounds.Height)
 			};
 
 			takePhotoButton = new UIButton () {
 				Frame = new CGRect (centerButtonX, bottomButtonY, buttonWidth, buttonHeight)
 			};
-			takePhotoButton.SetBackgroundImage (UIImage.FromFile ("TakePhotoButton.png"), UIControlState.Normal);
+			takePhotoButton.SetBackgroundImage (UIImage.FromFile ("PlanoButton.png"), UIControlState.Normal);
 
 			toggleCameraButton = new UIButton () {
 				Frame = new CGRect (topRightX, topButtonY + 5, 35, 26)
@@ -72,6 +86,9 @@ namespace CustomRenderer.iOS
 			View.Add (takePhotoButton);
 			View.Add (toggleCameraButton);
 			View.Add (toggleFlashButton);
+
+
+
 		}
 
 		void SetupEventHandlers ()
@@ -87,6 +104,10 @@ namespace CustomRenderer.iOS
 			toggleFlashButton.TouchUpInside += (object sender, EventArgs e) => {
 				ToggleFlash ();
 			};
+
+            VolumeButtonHandler.Instance.ButtonClicked += (object sender, EventArgs e) => {
+                CapturePhoto();
+            };
 		}
 
 		async void CapturePhoto ()
