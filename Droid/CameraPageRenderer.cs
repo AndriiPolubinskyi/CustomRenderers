@@ -10,6 +10,7 @@ using Android.Hardware;
 using Android.Views;
 using Android.Graphics;
 using Android.Widget;
+using Android.Runtime;
 
 [assembly: ExportRenderer(typeof(CameraPage), typeof(CameraPageRenderer))]
 namespace CustomRenderer.Droid
@@ -22,7 +23,7 @@ namespace CustomRenderer.Droid
         global::Android.Widget.Button switchCameraButton;
         global::Android.Views.View view;
 
-        Activity activity;
+        MainActivity activity;
         CameraFacing cameraType;
         TextureView textureView;
         SurfaceTexture surfaceTexture;
@@ -56,12 +57,19 @@ namespace CustomRenderer.Droid
 
         void SetupUserInterface()
         {
-            activity = this.Context as Activity;
+            activity = this.Context as MainActivity;
             view = activity.LayoutInflater.Inflate(Resource.Layout.CameraLayout, this, false);
             cameraType = CameraFacing.Back;
 
             textureView = view.FindViewById<TextureView>(Resource.Id.textureView);
             textureView.SurfaceTextureListener = this;
+
+            activity.VolumeUpButtonPressed += Activity_VolumeUpButtonPressed;
+        }
+
+        private void Activity_VolumeUpButtonPressed(object sender, KeyEvent e)
+        {
+            takePhotoButton.PerformClick();
         }
 
         void SetupEventHandlers()
