@@ -11,6 +11,7 @@ using Android.Views;
 using Android.Graphics;
 using Android.Widget;
 using Android.Runtime;
+using System.Threading.Tasks;
 
 [assembly: ExportRenderer(typeof(CameraPage), typeof(CameraPageRenderer))]
 namespace CustomRenderer.Droid
@@ -68,7 +69,7 @@ namespace CustomRenderer.Droid
 
         private async void Activity_VolumeUpButtonPressed(object sender, KeyEvent e)
         {
-            await TakePicture();
+            await PassPhotoToView();
         }
 
         void SetupEventHandlers()
@@ -201,38 +202,29 @@ namespace CustomRenderer.Droid
 
         async void TakePhotoButtonTapped(object sender, EventArgs e)
         {
-            await TakePicture();
+            await PassPhotoToView();
         }
 
-        private async System.Threading.Tasks.Task TakePicture()
+        private async Task PassPhotoToView()
+        {
+            byte[] bytes = await TakePhoto();
+            (Element as CameraPage).SetPhotoResult(bytes, textureView.Bitmap.Width, textureView.Bitmap.Height);
+        }
+
+        public async Task<byte[]> TakePhoto()
         {
             camera.StopPreview();
-
+            var ratio = ((decimal)Height) / Width;
             var image = textureView.Bitmap;
-
-            try
+            byte[] imageBytes = null;
+            using (var imageStream = new System.IO.MemoryStream())
             {
-                var absolutePath = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryDcim).AbsolutePath;
-                var folderPath = absolutePath + "/Camera";
-                var filePath = System.IO.Path.Combine(folderPath, string.Format("photo_{0}.jpg", Guid.NewGuid()));
-
-                var fileStream = new FileStream(filePath, FileMode.Create);
-                await image.CompressAsync(Bitmap.CompressFormat.Jpeg, 50, fileStream);
-                fileStream.Close();
+                await image.CompressAsync(Bitmap.CompressFormat.Jpeg, 50, imageStream);
                 image.Recycle();
-
-                var intent = new Android.Content.Intent(Android.Content.Intent.ActionMediaScannerScanFile);
-                var file = new Java.IO.File(filePath);
-                var uri = Android.Net.Uri.FromFile(file);
-                intent.SetData(uri);
-                MainActivity.Instance.SendBroadcast(intent);
+                imageBytes = imageStream.ToArray();
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(@"				", ex.Message);
-            }
-
             camera.StartPreview();
+            return imageBytes;
         }
     }
 }
