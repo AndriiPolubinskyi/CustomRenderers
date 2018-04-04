@@ -63,13 +63,12 @@ namespace CustomRenderer.Droid
 
             textureView = view.FindViewById<TextureView>(Resource.Id.textureView);
             textureView.SurfaceTextureListener = this;
-
             activity.VolumeUpButtonPressed += Activity_VolumeUpButtonPressed;
         }
 
-        private void Activity_VolumeUpButtonPressed(object sender, KeyEvent e)
+        private async void Activity_VolumeUpButtonPressed(object sender, KeyEvent e)
         {
-            takePhotoButton.PerformClick();
+            await TakePicture();
         }
 
         void SetupEventHandlers()
@@ -112,6 +111,7 @@ namespace CustomRenderer.Droid
 
         public bool OnSurfaceTextureDestroyed(SurfaceTexture surface)
         {
+            activity.VolumeUpButtonPressed -= Activity_VolumeUpButtonPressed;
             camera.StopPreview();
             camera.Release();
             return true;
@@ -200,6 +200,11 @@ namespace CustomRenderer.Droid
         }
 
         async void TakePhotoButtonTapped(object sender, EventArgs e)
+        {
+            await TakePicture();
+        }
+
+        private async System.Threading.Tasks.Task TakePicture()
         {
             camera.StopPreview();
 
