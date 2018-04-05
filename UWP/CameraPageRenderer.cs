@@ -24,6 +24,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Xamarin.Forms.Platform.UWP;
 using Windows.Foundation;
+using Windows.UI;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 [assembly: ExportRenderer(typeof(CameraPage), typeof(CameraPageRenderer))]
 namespace CustomRenderer.UWP
@@ -51,7 +53,6 @@ namespace CustomRenderer.UWP
         bool mirroringPreview;
         
         Page page; 
-        AppBarButton takePhotoButton;
         Application app;
 
 
@@ -71,7 +72,7 @@ namespace CustomRenderer.UWP
                 app.Resuming += OnAppResuming;
 
                 SetupUserInterface();
-                SetupCamera();
+                //SetupCamera();
 
                 this.Children.Add(page);
             }
@@ -83,17 +84,18 @@ namespace CustomRenderer.UWP
 
         protected override Size ArrangeOverride(Size finalSize)
         {
-            page.Arrange(new Windows.Foundation.Rect(0, 0, finalSize.Width, finalSize.Height));
+            page.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
             return finalSize;
         }
 
         void SetupUserInterface()
         {
-            takePhotoButton = new AppBarButton
+
+            var tagButton = new AppBarButton
             {
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Icon = new SymbolIcon(Symbol.Camera)
+                Icon = new SymbolIcon(Symbol.Tag)
             };
 
             var approvePhotoButton = new AppBarButton
@@ -111,8 +113,9 @@ namespace CustomRenderer.UWP
             };
 
             var commandBar = new CommandBar();
-            commandBar.PrimaryCommands.Add(takePhotoButton);
+          
             commandBar.PrimaryCommands.Add(approvePhotoButton);
+            commandBar.PrimaryCommands.Add(tagButton);
             commandBar.PrimaryCommands.Add(cancelPhotoButton);
 
             captureElement = new CaptureElement();
@@ -139,9 +142,11 @@ namespace CustomRenderer.UWP
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Right,
                 Content = "Photo",
-                Margin = new Thickness(12)
+                Margin = new Thickness(12),
+                Background = new SolidColorBrush(Colors.Blue)
             };
 
+            button.Click += Button_Click;
             Grid.SetColumnSpan(button, 2);
             Grid.SetRowSpan(button, 2);
             Grid.SetColumn(button, 0);
@@ -152,7 +157,20 @@ namespace CustomRenderer.UWP
             page = new Page();
             page.BottomAppBar = commandBar;
             page.Content = grid;
+            page.Loaded += Page_Loaded;
             page.Unloaded += OnPageUnloaded;
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+           
+            SetupCamera();
+        }
+
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+            await TakePhotoAsync();
+
         }
 
         async void SetupCamera()
@@ -167,18 +185,21 @@ namespace CustomRenderer.UWP
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                // Only handle event if the page is being displayed
-                if (args.Property == SystemMediaTransportControlsProperty.SoundLevel && page.Frame.CurrentSourcePageType == typeof(MainPage))
+                if (page.Frame != null)
                 {
-                    // Check if the app is being muted. If so, it's being minimized
-                    // Otherwise if it is not initialized, it's being brought into focus
-                    if (sender.SoundLevel == SoundLevel.Muted)
+                    // Only handle event if the page is being displayed
+                    if (args.Property == SystemMediaTransportControlsProperty.SoundLevel && page.Frame.CurrentSourcePageType == typeof(MainPage))
                     {
-                        await CleanupCameraAsync();
-                    }
-                    else if (!isInitialized)
-                    {
-                        await InitializeCameraAsync();
+                        // Check if the app is being muted. If so, it's being minimized
+                        // Otherwise if it is not initialized, it's being brought into focus
+                        if (sender.SoundLevel == SoundLevel.Muted)
+                        {
+                            await CleanupCameraAsync();
+                        }
+                        else if (!isInitialized)
+                        {
+                            await InitializeCameraAsync();
+                        }
                     }
                 }
             });
@@ -402,21 +423,97 @@ namespace CustomRenderer.UWP
 
         async Task TakePhotoAsync()
         {
+            
             var stream = new InMemoryRandomAccessStream();
-            await mediaCapture.CapturePhotoToStreamAsync(ImageEncodingProperties.CreateJpeg(), stream);
 
-            try
-            {
-                var file = await captureFolder.CreateFileAsync("photo.jpg", CreationCollisionOption.GenerateUniqueName);
-                var orientation = ConvertOrientationToPhotoOrientation(GetCameraOrientation());
-                await ReencodeAndSavePhotoAsync(stream, file, orientation);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Exception when taking photo: " + ex.ToString());
-            }
+            await mediaCapture.CapturePhotoToStreamAsync(ImageEncodingProperties.CreateJpeg(), stream);
+            await StopPreviewAsync();
+
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+            SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+            
+
+            var data = await EncodedBytes(softwareBitmap, BitmapEncoder.JpegEncoderId);
+
+            (Element as CameraPage).SetPhotoResult(data.ToArray(), (int)decoder.PixelWidth, (int)decoder.PixelHeight);
+
         }
-        
+
+        private async Task<byte[]> EncodedBytes(SoftwareBitmap soft, Guid encoderId)
+        {
+            byte[] array = null;
+
+            // First: Use an encoder to copy from SoftwareBitmap to an in-mem stream (FlushAsync)
+            // Next:  Use ReadAsync on the in-mem stream to get byte[] array
+
+            using (var ms = new InMemoryRandomAccessStream())
+            {
+                BitmapEncoder encoder = await BitmapEncoder.CreateAsync(encoderId, ms);
+                encoder.SetSoftwareBitmap(soft);
+
+                try
+                {
+                    await encoder.FlushAsync();
+                }
+                catch (Exception ex) { return new byte[0]; }
+
+                array = new byte[ms.Size];
+                await ms.ReadAsync(array.AsBuffer(), (uint)ms.Size, InputStreamOptions.None);
+            }
+            return array;
+        }
+
+        private async Task<IRandomAccessStream> TransformImageAsync(BitmapDecoder decoder, VideoRotation captureRotation)
+        {
+            var inputImageBytes = (await decoder.GetPixelDataAsync()).DetachPixelData();
+
+            var destinationMemoryStream = new InMemoryRandomAccessStream();
+
+            // set image scaling transformation
+            
+            var bitmapTransform = new BitmapTransform()
+            {
+                ScaledWidth = (uint)decoder.PixelWidth,
+                ScaledHeight = (uint)decoder.PixelHeight,
+                InterpolationMode = BitmapInterpolationMode.Cubic
+            };
+
+            // get scaled image data
+            var pixels = (await decoder.GetPixelDataAsync(
+                                            decoder.BitmapPixelFormat,
+                                            decoder.BitmapAlphaMode,
+                                            bitmapTransform,
+                                            ExifOrientationMode.RespectExifOrientation,
+                                            ColorManagementMode.DoNotColorManage)).DetachPixelData();
+
+            // set image quality
+            var imagePropertySet = new BitmapPropertySet();
+            var imageQualityProperty = new BitmapTypedValue(1000, PropertyType.Single);
+            imagePropertySet.Add("ImageQuality", imageQualityProperty);
+
+            var encoder = await BitmapEncoder.CreateAsync(
+                                                BitmapEncoder.JpegEncoderId,
+                                                destinationMemoryStream,
+                                                imagePropertySet);
+
+            // set image rotation transformation
+            encoder.BitmapTransform.Rotation = BitmapRotation.None;
+
+            // encode image data with the specified scaling, rotation and quality
+            encoder.SetPixelData(
+                        decoder.BitmapPixelFormat,
+                        decoder.BitmapAlphaMode,
+                        bitmapTransform.ScaledWidth,
+                        bitmapTransform.ScaledHeight,
+                        decoder.DpiX,
+                        decoder.DpiY,
+                        pixels);
+
+            await encoder.FlushAsync();
+
+            return destinationMemoryStream;
+        }
+
         async Task CleanupCameraAsync()
         {
             if (isInitialized)
@@ -457,9 +554,7 @@ namespace CustomRenderer.UWP
 
             RegisterEventHandlers();
 
-            var picturesLibrary = await StorageLibrary.GetLibraryAsync(KnownLibraryId.Pictures);
-            // Fallback to local app storage if no pictures library
-            captureFolder = picturesLibrary.SaveFolder ?? ApplicationData.Current.LocalFolder;
+          
         }
 
         async Task CleanupUIAsync()
@@ -489,7 +584,7 @@ namespace CustomRenderer.UWP
 
             displayInformation.OrientationChanged += OnDisplayInformationOrientationChanged;
             systemMediaControls.PropertyChanged += OnSystemMediaControlsPropertyChanged;
-            takePhotoButton.Click += OnTakePhotoButtonClicked;
+            //takePhotoButton.Click += OnTakePhotoButtonClicked;
         }
         
         void UnregisterEventHandlers()
@@ -506,7 +601,7 @@ namespace CustomRenderer.UWP
 
             displayInformation.OrientationChanged -= OnDisplayInformationOrientationChanged;
             systemMediaControls.PropertyChanged -= OnSystemMediaControlsPropertyChanged;
-            takePhotoButton.Click -= OnTakePhotoButtonClicked;
+           // takePhotoButton.Click -= OnTakePhotoButtonClicked;
         }
 
         static async Task ReencodeAndSavePhotoAsync(IRandomAccessStream stream, StorageFile file, PhotoOrientation orientation)
