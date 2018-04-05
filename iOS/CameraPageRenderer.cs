@@ -117,9 +117,11 @@ namespace CustomRenderer.iOS
 			var jpegImage = AVCaptureStillImageOutput.JpegStillToNSData (sampleBuffer);
 
 			var photo = new UIImage (jpegImage);
-			photo.SaveToPhotosAlbum ((image, error) => {
-				Console.Error.WriteLine (@"				Error: ", error);
-			});
+
+            (Element as CameraPage).SetPhotoResult(jpegImage.ToArray(),
+                                                   (int)photo.Size.Width,
+                                                   (int)photo.Size.Height);
+            
 		}
 
 		void ToggleFrontBackCamera ()
