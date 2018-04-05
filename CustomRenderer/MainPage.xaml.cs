@@ -8,6 +8,7 @@ namespace CustomRenderer
 		public MainPage ()
 		{
 			InitializeComponent ();
+            NavigationPage.SetHasNavigationBar(this, false);
 		}
 
 		async void OnTakePhotoButtonClicked (object sender, EventArgs e)

@@ -4,10 +4,9 @@
              BackgroundColor="Wheat"
              x:Class="CustomRenderer.PicturePreviewPage">
     <ContentPage.Content>
-
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="9*" />
+                <RowDefinition Height="10*" />
                 <RowDefinition Height="1*" />
             </Grid.RowDefinitions>
             <StackLayout VerticalOptions="Start" BackgroundColor="Yellow" Grid.Row="0">
@@ -15,9 +14,8 @@
             </StackLayout>
             <StackLayout Orientation="Horizontal" VerticalOptions="End" HorizontalOptions="CenterAndExpand" Grid.Row="1">
                 <Button Text="Yes" BackgroundColor="Blue" TextColor="White" />
-                <Button Text="No" BackgroundColor="Red" TextColor="White" />
+                <Button Text="No" BackgroundColor="Red" TextColor="White" Clicked="ButtonNo_Clicked" />
             </StackLayout>
         </Grid>
-       
     </ContentPage.Content>
 </ContentPage>

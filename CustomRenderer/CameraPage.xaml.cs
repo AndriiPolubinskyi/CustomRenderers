@@ -17,6 +17,7 @@ namespace CustomRenderer
 		{
 			// A custom renderer is used to display the camera UI
 			InitializeComponent ();
+            NavigationPage.SetHasNavigationBar(this, false);
 		}
 	}
 }

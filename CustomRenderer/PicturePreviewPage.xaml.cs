@@ -24,5 +24,10 @@ namespace CustomRenderer
 
             imgView.Source = Image;
         }
+
+        private async void ButtonNo_Clicked(object sender, EventArgs e)
+        {
+            await Navigation.PopModalAsync();
+        }
     }
 }
