@@ -1,24 +1,21 @@
 ﻿using System;
-using System.IO;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
-using CustomRenderer;
 using CustomRenderer.Droid;
-using Android.App;
 using Android.Content;
 using Android.Hardware;
 using Android.Views;
 using Android.Graphics;
 using Android.Widget;
-using Android.Runtime;
 using System.Threading.Tasks;
+using CustomRenderer.Views;
 
-[assembly: ExportRenderer(typeof(CameraPage), typeof(CameraPageRenderer))]
+[assembly: ExportRenderer(typeof(CameraPageView), typeof(CameraPageRenderer))]
 namespace CustomRenderer.Droid
 {
     public class CameraPageRenderer : PageRenderer, TextureView.ISurfaceTextureListener
     {
-        global::Android.Hardware.Camera camera;
+        Android.Hardware.Camera camera;
         global::Android.Widget.Button takePhotoButton;
         global::Android.Widget.Button toggleFlashButton;
         global::Android.Widget.Button switchCameraButton;
@@ -102,7 +99,7 @@ namespace CustomRenderer.Droid
 
         public void OnSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
         {
-            camera = global::Android.Hardware.Camera.Open((int)cameraType);
+            camera = Android.Hardware.Camera.Open((int)cameraType);
             textureView.LayoutParameters = new FrameLayout.LayoutParams(width, height);
             surfaceTexture = surface;
 
@@ -153,9 +150,9 @@ namespace CustomRenderer.Droid
 
                     camera.StopPreview();
                     camera.Release();
-                    camera = global::Android.Hardware.Camera.Open((int)cameraType);
+                    camera = Android.Hardware.Camera.Open((int)cameraType);
                     var parameters = camera.GetParameters();
-                    parameters.FlashMode = global::Android.Hardware.Camera.Parameters.FlashModeTorch;
+                    parameters.FlashMode = Android.Hardware.Camera.Parameters.FlashModeTorch;
                     camera.SetParameters(parameters);
                     camera.SetPreviewTexture(surfaceTexture);
                     PrepareAndStartCamera();
@@ -167,9 +164,9 @@ namespace CustomRenderer.Droid
                 camera.StopPreview();
                 camera.Release();
 
-                camera = global::Android.Hardware.Camera.Open((int)cameraType);
+                camera = Android.Hardware.Camera.Open((int)cameraType);
                 var parameters = camera.GetParameters();
-                parameters.FlashMode = global::Android.Hardware.Camera.Parameters.FlashModeOff;
+                parameters.FlashMode = Android.Hardware.Camera.Parameters.FlashModeOff;
                 camera.SetParameters(parameters);
                 camera.SetPreviewTexture(surfaceTexture);
                 PrepareAndStartCamera();
@@ -184,7 +181,7 @@ namespace CustomRenderer.Droid
 
                 camera.StopPreview();
                 camera.Release();
-                camera = global::Android.Hardware.Camera.Open((int)cameraType);
+                camera = Android.Hardware.Camera.Open((int)cameraType);
                 camera.SetPreviewTexture(surfaceTexture);
                 PrepareAndStartCamera();
             }
@@ -194,7 +191,7 @@ namespace CustomRenderer.Droid
 
                 camera.StopPreview();
                 camera.Release();
-                camera = global::Android.Hardware.Camera.Open((int)cameraType);
+                camera = Android.Hardware.Camera.Open((int)cameraType);
                 camera.SetPreviewTexture(surfaceTexture);
                 PrepareAndStartCamera();
             }
@@ -208,7 +205,7 @@ namespace CustomRenderer.Droid
         private async Task PassPhotoToView()
         {
             byte[] bytes = await TakePhoto();
-            (Element as CameraPage).SetPhotoResult(bytes, textureView.Bitmap.Width, textureView.Bitmap.Height);
+            (Element as CameraPageView).SetPhotoResult(bytes, textureView.Bitmap.Width, textureView.Bitmap.Height);
         }
 
         public async Task<byte[]> TakePhoto()

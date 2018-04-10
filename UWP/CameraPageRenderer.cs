@@ -1,5 +1,4 @@
-﻿using CustomRenderer;
-using CustomRenderer.UWP;
+﻿using CustomRenderer.UWP;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -26,8 +25,9 @@ using Xamarin.Forms.Platform.UWP;
 using Windows.Foundation;
 using Windows.UI;
 using System.Runtime.InteropServices.WindowsRuntime;
+using CustomRenderer.Views;
 
-[assembly: ExportRenderer(typeof(CameraPage), typeof(CameraPageRenderer))]
+[assembly: ExportRenderer(typeof(CameraPageView), typeof(CameraPageRenderer))]
 namespace CustomRenderer.UWP
 {
     public class CameraPageRenderer : PageRenderer
@@ -435,7 +435,7 @@ namespace CustomRenderer.UWP
 
             var data = await EncodedBytes(softwareBitmap, BitmapEncoder.JpegEncoderId);
 
-            (Element as CameraPage).SetPhotoResult(data.ToArray(), (int)decoder.PixelWidth, (int)decoder.PixelHeight);
+            (Element as CameraPageView).SetPhotoResult(data.ToArray(), (int)decoder.PixelWidth, (int)decoder.PixelHeight);
 
         }
 

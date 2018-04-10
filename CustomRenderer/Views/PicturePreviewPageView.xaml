@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             BackgroundColor="Wheat"
-             x:Class="CustomRenderer.PicturePreviewPage">
+             x:Class="CustomRenderer.Views.PicturePreviewPageView">
     <ContentPage.Content>
         <Grid>
             <Grid.RowDefinitions>
@@ -10,11 +9,12 @@
                 <RowDefinition Height="1*" />
             </Grid.RowDefinitions>
             <StackLayout VerticalOptions="Start" BackgroundColor="Yellow" Grid.Row="0">
-                <Image x:Name="imgView" Aspect="AspectFit"  />
+                <Image x:Name="imgView" Aspect="AspectFit" Source="{Binding PreviewImage.Source}" />
             </StackLayout>
             <StackLayout Orientation="Horizontal" VerticalOptions="End" HorizontalOptions="CenterAndExpand" Grid.Row="1">
-                <Button Text="Yes" BackgroundColor="Blue" TextColor="White" />
-                <Button Text="No" BackgroundColor="Red" TextColor="White" Clicked="ButtonNo_Clicked" />
+                <Button Text="Yes" BackgroundColor="Blue" TextColor="White" Command="{Binding AddImageToCollectionCommand}"/>
+                <Button Text="No" BackgroundColor="Red" TextColor="White" Command="{Binding BackToCameraPageCommand}"/>
+                <Button Text="Close" BackgroundColor="Yellow" TextColor="Blue" Command="{Binding GoToMainPageCommand}"/>
             </StackLayout>
         </Grid>
     </ContentPage.Content>

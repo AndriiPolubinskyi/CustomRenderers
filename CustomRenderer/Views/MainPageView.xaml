@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" 
+			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+			 x:Class="CustomRenderer.Views.MainPageView"
+             xmlns:custom="clr-namespace:CustomRenderer.Controls;assembly=CustomRenderer"
+			 Title="Main Page"
+             x:Name="MainPage">
+	<ContentPage.Content >
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="128" />
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Image Source="{Binding PreviewImage}" Grid.Row="0" />
+            <custom:ImageGallery
+				ItemsSource="{Binding Images}"
+				Grid.Row="1">
+                <custom:ImageGallery.ItemTemplate>
+                    <DataTemplate>
+                        <Image
+							Source="{Binding Source}"
+							Aspect="AspectFit">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer
+									Command="{Binding Path=BindingContext.PreviewImageCommand, Source={x:Reference MainPage}}"
+									CommandParameter="{Binding ImageId}" />
+                            </Image.GestureRecognizers>
+                        </Image>
+                    </DataTemplate>
+                </custom:ImageGallery.ItemTemplate>
+            </custom:ImageGallery>
+            <Button Grid.Row="2" Text="Photo" Command="{Binding CameraCommand}"/>
+        </Grid>
+    </ContentPage.Content>
+</ContentPage>

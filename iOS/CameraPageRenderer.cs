@@ -1,18 +1,18 @@
 ﻿using AVFoundation;
 using CoreGraphics;
-using CustomRenderer;
 using CustomRenderer.iOS;
 using CustomRenderer.iOS.Utils;
+using CustomRenderer.Views;
 using Foundation;
 using System;
 using UIKit;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.iOS;
 
-[assembly:ExportRenderer (typeof(CameraPage), typeof(CameraPageRenderer))]
+[assembly: ExportRenderer(typeof(CameraPageView), typeof(CameraPageRenderer))]
 namespace CustomRenderer.iOS
 {
-	public class CameraPageRenderer : PageRenderer
+    public class CameraPageRenderer : PageRenderer
 	{
 		AVCaptureSession captureSession;
 		AVCaptureDeviceInput captureDeviceInput;
@@ -118,7 +118,7 @@ namespace CustomRenderer.iOS
 
 			var photo = new UIImage (jpegImage);
 
-            (Element as CameraPage).SetPhotoResult(jpegImage.ToArray(),
+            (Element as CameraPageView).SetPhotoResult(jpegImage.ToArray(),
                                                    (int)photo.Size.Width,
                                                    (int)photo.Size.Height);
             
