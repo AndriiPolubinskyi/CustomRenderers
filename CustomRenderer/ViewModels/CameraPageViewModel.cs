@@ -20,7 +20,7 @@ namespace CustomRenderer.ViewModels
 
         public async Task ExecutePreviewPhotoCommand()
         {
-            await Navigation.PushAsync(new PicturePreviewPageView(Image));
+            await Navigation.PushAsync(new PicturePreviewPageView(Image), false);
         }
 
        

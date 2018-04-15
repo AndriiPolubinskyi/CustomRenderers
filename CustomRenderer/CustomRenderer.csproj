@@ -35,6 +35,8 @@
   <ItemGroup>
     <Compile Include="App.cs" />
     <Compile Include="Controls\ImageGallery.cs" />
+    <Compile Include="Enums\CameraFacingDirection.cs" />
+    <Compile Include="Enums\Orientation.cs" />
     <Compile Include="Models\GalleryImage.cs" />
     <Compile Include="ViewModels\BaseViewModelExt.cs" />
     <Compile Include="ViewModels\CameraPageViewModel.cs" />

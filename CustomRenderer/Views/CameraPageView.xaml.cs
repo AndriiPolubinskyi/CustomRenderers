@@ -14,6 +14,7 @@ namespace CustomRenderer.Views
             _viewModel.Image.OriginalImage = image;
             _viewModel.Image.Source = ImageSource.FromStream(() => new MemoryStream(image));
             _viewModel.PreviewPhotoCommand.Execute(null);
+            
         }
 
 
@@ -24,7 +25,8 @@ namespace CustomRenderer.Views
             _viewModel = new CameraPageViewModel();
             BindingContext = _viewModel;
             NavigationPage.SetHasNavigationBar(this, false);
-		}
-	}
+            
+        }
+    }
 }
 

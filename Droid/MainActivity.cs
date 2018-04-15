@@ -1,7 +1,7 @@
 ﻿using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
-using Android.Views;
 using System;
 
 namespace CustomRenderer.Droid
@@ -9,7 +9,9 @@ namespace CustomRenderer.Droid
     [Activity(Label = "CustomRenderer.Droid", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize, ScreenOrientation = ScreenOrientation.Portrait)]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsApplicationActivity
     {
-        public event EventHandler<KeyEvent> VolumeUpButtonPressed;
+
+        public event EventHandler<ActivityResultEventArgs> ActivityResult = delegate { };
+
         internal static MainActivity Instance { get; private set; }
 
         protected override void OnCreate(Bundle bundle)
@@ -20,15 +22,25 @@ namespace CustomRenderer.Droid
             LoadApplication(new App());
         }
 
-        public override bool OnKeyDown(Keycode keyCode, KeyEvent e)
+        protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
         {
-            if (keyCode == Keycode.VolumeUp)
+            ActivityResult(this, new ActivityResultEventArgs
             {
-                VolumeUpButtonPressed?.Invoke(this, e);
-                return true;
-            }
-            return base.OnKeyDown(keyCode, e);
+                RequestCode = requestCode,
+                ResultCode = resultCode,
+                Data = data
+            });
         }
+    }
+
+    public class ActivityResultEventArgs : EventArgs
+    {
+        public int RequestCode { get; set; }
+        public Result ResultCode { get; set; }
+        public Intent Data { get; set; }
+
+        public ActivityResultEventArgs() : base()
+        { }
     }
 }
 
