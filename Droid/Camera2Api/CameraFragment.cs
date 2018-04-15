@@ -100,6 +100,8 @@ namespace CustomRenderer.Droid.Camera2Api
 
             var switchCameraButton = view.FindViewById(Resource.Id.switchCameraButton);
             switchCameraButton.Click += SwitchCameraButtonOnClick;
+
+            (Activity as CameraActivity).VolumeUpButtonPressed += CameraFragment_VolumeUpButtonPressed;
         }
 
         public override void OnResume()
@@ -453,6 +455,11 @@ namespace CustomRenderer.Droid.Camera2Api
             {
                 Log.WriteLine(LogPriority.Error, "Exception", ex.Message);
             }
+        }
+
+        private void CameraFragment_VolumeUpButtonPressed(object sender, KeyEvent e)
+        {
+            TakePicture();
         }
 
         private bool CanSwitch()
